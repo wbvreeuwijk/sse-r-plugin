@@ -5,7 +5,8 @@ RUN apt-get install git unzip -y
 
 RUN git clone https://github.com/wbvreeuwijk/sse-r-plugin.git
 
-RUN cd sse-r-plugin/csharp && nuget restore \
+RUN cd sse-r-plugin/csharp \
+ && nuget restore \
  && temp_dir=packages/Grpc.Tools.1.4.x/tmp \
  && curl_url=https://www.nuget.org/api/v2/package/Grpc.Tools/ \
  && mkdir -p $temp_dir \
@@ -16,5 +17,8 @@ RUN cd sse-r-plugin/csharp && nuget restore \
  && rm -rf tmp \
  && cd ../.. \
  && chmod 755 packages/Grpc.Tools.1.4.x/tools/linux_x64/protoc \
- && chmod 755 packages/Grpc.Tools.1.4.x/tools/linux_x64/grpc_csharp_plugin 
+ && chmod 755 packages/Grpc.Tools.1.4.x/tools/linux_x64/grpc_csharp_plugin \
  && chmod 755 ServerSideExtension/generate_SSE_Stubs_from_proto.sh
+ 
+RUN cd sse-r-plugin/csharp \
+ && msbuild ServerSideExtension.sln
