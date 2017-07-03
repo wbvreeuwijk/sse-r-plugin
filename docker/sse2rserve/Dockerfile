@@ -2,6 +2,8 @@ FROM mono
 
 ENV RHOST="rserve"
 
+MAINTAINER "Bas van Reeuwijk" bvk@qlik.com
+
 # Details
 LABEL version="1.0"
 LABEL description="Image running SSEtoRserve in mono"
@@ -33,7 +35,7 @@ RUN nuget restore \
 RUN msbuild ServerSideExtension.sln
 
 # Cleanup 
-# RUN rm -rf ServerSideExtension packages
+RUN rm -rf ServerSideExtension packages
 
 # Port SSEtoRserve is going to listen on
 EXPOSE ${PORT:-50051}
