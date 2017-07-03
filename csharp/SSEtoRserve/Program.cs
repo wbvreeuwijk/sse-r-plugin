@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using System.Thread;
 using NLog;
 using System.IO;
 
@@ -71,13 +72,16 @@ namespace SSEtoRserve
                     server.Start();
                     Console.WriteLine("Press any key to stop SSEtoRserve...");
                     logger.Info($"gRPC listening on port {grpcPort}");
-                    Console.ReadKey();
-                    while(true) {
-                        Thread.Sleep(100);
+//                  Console.ReadKey();
+                    try {
+                        while(true) {
+                            Thread.Sleep(1000);
+                        }
+                    } finally {
+                        logger.Info("Shutting down SSEtoRserve... Bye!");
+                        server?.ShutdownAsync().Wait();
+                        rServeEvaluator?.Dispose();
                     }
-                    logger.Info("Shutting down SSEtoRserve... Bye!");
-                    server?.ShutdownAsync().Wait();
-                    rServeEvaluator?.Dispose();
                 }
             }
             catch (Exception ex)
