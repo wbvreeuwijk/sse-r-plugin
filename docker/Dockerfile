@@ -1,6 +1,9 @@
 FROM mono 
 
 ENV expose=${port:-50051}
+ENV rserveHost=${rserveHost:-rserve}
+ENV grpcHost=${grpcHost:-0.0.0.0}
+
 # Details
 LABEL version="1.0"
 LABEL description="Image running SSEtoRserve in mono"
@@ -37,8 +40,35 @@ RUN rm -rf ServerSideExtension packages
 # Port SSEtoRserve is going to listen on
 EXPOSE ${expose}
 
+RUN { \
+    echo '<?xml version="1.0" encoding="utf-8" ?>';\
+    echo '  <configuration>';\
+    echo '    <configSections>';\
+    echo '        <sectionGroup name="applicationSettings" type="System.Configuration.ApplicationSettingsGroup, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" >';\
+    echo '            <section name="SSEtoRserve.Properties.Settings" type="System.Configuration.ClientSettingsSection, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" requirePermission="false" />';\
+    echo '        </sectionGroup>';\
+    echo '    </configSections>';\
+    echo '    <startup>';\
+    echo '        <supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.5.2" />';\
+    echo '    </startup>';\
+    echo '    <applicationSettings>';\
+    echo '        <SSEtoRserve.Properties.Settings>';\
+    echo '            <setting name="grpcPort" serializeAs="String">';\
+    echo '                <value>50051</value>';\
+    echo '            </setting>';\
+    echo '            <setting name="rserveHost" serializeAs="String">';\
+    echo '                <value>rserve</value>';\
+    echo '            </setting>';\
+    echo '            <setting name="rservePort" serializeAs="String">';\
+    echo '                <value>6311</value>';\
+    echo '            </setting>';\
+    echo '            <setting name="grpcHost" serializeAs="String">';\
+    echo '                <value>0.0.0.0</value>   <!-- Set to 0.0.0.0 if you want it reachable from the outside world -->';\
+    echo '            </setting>';\
+    echo '        </SSEtoRserve.Properties.Settings>';\
+    echo '    </applicationSettings>';\
+    echo '</configuration>';\
+} | tee /sse-r-plugin/csharp/SSEtoRserve/bin/Debug/SSEtoRserve.exe.config
+
 # Start command
-ENTRYPOINT ["/usr/bin/mono",
-            "/sse-r-plugin/csharp/SSEtoRserve/bin/Debug/SSEtoRserve.exe",
-            "-p",
-            ${expose}]
+#ENTRYPOINT ["/usr/bin/mono", "/sse-r-plugin/csharp/SSEtoRserve/bin/Debug/SSEtoRserve.exe"]
