@@ -20,12 +20,7 @@ namespace SSEtoRserve
             {
                 var grpcHost = Convert.ToString(Properties.Settings.Default.grpcHost ?? "localhost");
                 int grpcPort = Convert.ToInt32(Properties.Settings.Default.grpcPort ?? "50051");
-                var IPAddress rserveHost;
-                try {
-                    rserveHost = Dns.GetHostAddresses(Properties.Settings.Default.rserveHost ?? "localhost")[0];
-                } catch {
-                    rserveHost = IPAddress.Parse("127.0.0.1");
-                }
+                var rserveHost = IPAddress.Parse(Properties.Settings.Default.rserveHost ?? "127.0.0.1");
                 int rservePort = Convert.ToInt32(Properties.Settings.Default.rservePort ?? "6311");
                 var rProcessPath = Convert.ToString(Properties.Settings.Default.rProcessPathToStart ?? "");
                 var rProcessCommandLineArgs = Convert.ToString(Properties.Settings.Default.rProcessCommandLineArgs ?? "");
