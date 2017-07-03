@@ -72,6 +72,9 @@ namespace SSEtoRserve
                     Console.WriteLine("Press any key to stop SSEtoRserve...");
                     logger.Info($"gRPC listening on port {grpcPort}");
                     Console.ReadKey();
+                    while(true) {
+                        Thread.Sleep(100);
+                    }
                     logger.Info("Shutting down SSEtoRserve... Bye!");
                     server?.ShutdownAsync().Wait();
                     rServeEvaluator?.Dispose();

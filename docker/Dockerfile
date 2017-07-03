@@ -1,8 +1,6 @@
 FROM mono 
 
-ENV expose=${port:-50051}
-ENV rserveHost=${rserveHost:-rserve}
-ENV grpcHost=${grpcHost:-0.0.0.0}
+ENV RHOST="rserve"
 
 # Details
 LABEL version="1.0"
@@ -10,7 +8,7 @@ LABEL description="Image running SSEtoRserve in mono"
 
 # Initial setup
 RUN apt-get update && apt-get upgrade -y
-RUN apt-get install git unzip -y
+RUN apt-get install git unzip supervisor -y
 
 # Get SSEtoRserve sources
 RUN git clone https://github.com/wbvreeuwijk/sse-r-plugin.git
@@ -38,7 +36,7 @@ RUN msbuild ServerSideExtension.sln
 # RUN rm -rf ServerSideExtension packages
 
 # Port SSEtoRserve is going to listen on
-EXPOSE ${expose}
+EXPOSE ${PORT:-50051}
 
 # Create configuration file for SSEtoRserve
 RUN { \
@@ -58,7 +56,7 @@ RUN { \
     echo '                <value>50051</value>';\
     echo '            </setting>';\
     echo '            <setting name="rserveHost" serializeAs="String">';\
-    echo '                <value>127.0.0.1</value>';\
+    echo '                <value>$rServeHost</value>';\
     echo '            </setting>';\
     echo '            <setting name="rservePort" serializeAs="String">';\
     echo '                <value>6311</value>';\
@@ -69,33 +67,17 @@ RUN { \
     echo '        </SSEtoRserve.Properties.Settings>';\
     echo '    </applicationSettings>';\
     echo '</configuration>';\
-} | tee /sse-r-plugin/csharp/SSEtoRserve/bin/Debug/SSEtoRserve.exe.config
+} | tee /sse-r-plugin/csharp/SSEtoRserve/bin/Debug/SSEtoRserve.exe.tmpl
 
-## Use Debian unstable via pinning -- new style via APT::Default-Release
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
-    && echo "deb [arch=amd64,i386] https://cran.rstudio.com/bin/linux/ubuntu xenial/" > /etc/apt/sources.list.d/ubuntu-unstable.list \
-	&& echo 'APT::Default-Release "testing";' > /etc/apt/apt.conf.d/default
-
-ENV R_BASE_VERSION 3.4.0
-
-## Now install R and littler, and create a link for littler in /usr/local/bin
-## Also set a default CRAN repo, and make sure littler knows about it too
-RUN apt-get update \
-	&& apt-get install -t unstable -y --no-install-recommends \
-		littler \
-                r-cran-littler \
-		r-base=${R_BASE_VERSION}* \
-		r-base-dev=${R_BASE_VERSION}* \
-		r-recommended=${R_BASE_VERSION}* \
-        && echo 'options(repos = c(CRAN = "https://cran.rstudio.com/"), download.file.method = "libcurl")' >> /etc/R/Rprofile.site \
-        && echo 'source("/etc/R/Rprofile.site")' >> /etc/littler.r \
-	&& ln -s /usr/share/doc/littler/examples/install.r /usr/local/bin/install.r \
-	&& ln -s /usr/share/doc/littler/examples/install2.r /usr/local/bin/install2.r \
-	&& ln -s /usr/share/doc/littler/examples/installGithub.r /usr/local/bin/installGithub.r \
-	&& ln -s /usr/share/doc/littler/examples/testInstalled.r /usr/local/bin/testInstalled.r \
-	&& install.r docopt \
-	&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds \
-	&& rm -rf /var/lib/apt/lists/*
+# Create start script
+RUN { \
+    echo "#!/bin/sh";\
+    echo "export IPADDR=\`getent hosts \$RHOST | awk '{ print \$1 ; exit }'\`";\
+    echo "export IPADDR=\${IPADDR:-127.0.0.1}";\
+    echo "sed 's/\$rServeHost/'\$IPADDR'/' /sse-r-plugin/csharp/SSEtoRserve/bin/Debug/SSEtoRserve.exe.tmpl > /sse-r-plugin/csharp/SSEtoRserve/bin/Debug/SSEtoRserve.exe.config";\
+    echo "/usr/bin/mono /sse-r-plugin/csharp/SSEtoRserve/bin/Debug/SSEtoRserve.exe";\
+} | tee /sse-r-plugin/csharp/start.sh
+RUN chmod 755 /sse-r-plugin/csharp/start.sh
 
 # Start command
-#ENTRYPOINT ["/usr/bin/mono", "/sse-r-plugin/csharp/SSEtoRserve/bin/Debug/SSEtoRserve.exe"]
+ENTRYPOINT ["/bin/sh", "-c", "/sse-r-plugin/csharp/start.sh"]

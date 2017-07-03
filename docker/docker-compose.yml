@@ -1,0 +1,15 @@
+version: "2"
+
+services:
+  sse_to_rserve:
+    container_name: "qs-sse2rserve"
+    image: "wbvreeuwijk/sse2rserve:latest"
+    ports:
+      - "50051:50051"
+
+  rserve:
+    image: "stevenpollack/docker-rserve"
+    container_name: "qs-rserve"
+    ports:
+      - "6311:6311"
+
