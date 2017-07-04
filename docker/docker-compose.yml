@@ -4,7 +4,7 @@ services:
   sse_to_rserve:
     container_name: "qs-sse2rserve"
     image: "wbvreeuwijk/sse2rserve:latest"
-    build: sse2rserve
+#   build: sse2rserve
     depends_on: 
       - rserve
     ports:
@@ -12,7 +12,7 @@ services:
 
   rserve:
     image: "wbvreeuwijk/docker-rserve"
-    build: rserve
+#   build: rserve
     container_name: "qs-rserve"
     ports:
       - "6311:6311"
